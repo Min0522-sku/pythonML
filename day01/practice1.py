@@ -50,7 +50,7 @@ kn.fit(iris_data, iris_target)
 print(kn.score(iris_data, iris_target))
 # [단계 8] 예측 및 시각화
 # 임의의 데이터 [꽃잎 길이 2.0, 꽃잎 너비 0.5]를 가진 꽃은 어떤 품종으로 예측되는지 코드를 작성하세요.
-print(kn.predict([[2.0,0.5]])) # 임의의 물고기 길이와 무게 -> 도미인지 빙어인지 예측한다
+print(kn.predict([[2.0,0.5]])) 
 
 # 임의의 값 시각화
 import matplotlib.pyplot as plt
