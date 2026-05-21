@@ -10,11 +10,17 @@ student_target = df['placement_status'].values
 from sklearn.model_selection import train_test_split
 train_input, test_input, train_target,  test_target = train_test_split(student_full, student_target, test_size=0.2, random_state=42)
 # [2] 특성 다항 확장 및 경사하강법 필수 스케일링
+from sklearn.preprocessing import PolynomialFeatures
+poly = PolynomialFeatures(degree= 2, include_bias=False)
+poly.fit(train_input)
+train_poly = poly.transform(train_input)
+test_poly = poly.transform(test_input)
+
 from sklearn.preprocessing import StandardScaler
 ss = StandardScaler()
-ss.fit(train_input)
-train_scaled = ss.transform(train_input)
-test_scaled = ss.transform(test_input)
+ss.fit(train_poly)
+train_scaled = ss.transform(train_poly)
+test_scaled = ss.transform(test_poly)
 # [3] 로그손실 또는 힌지손실 기반의 규제 하이퍼파라미터
 from sklearn.linear_model import SGDClassifier
 sc = SGDClassifier(loss='log_loss', random_state=42, max_iter=100, tol=None) 
@@ -28,7 +34,9 @@ print(sc.score(test_scaled, test_target))
 #  - 샘플 B : study_hours=2, attendance=60, sleep_hours=5, internet_usage=9, assignments_completed=4, previous_score=50
 a = [[9,95,7,2,18,85]]
 b = [[2,60,5,9,4,50]]
-a_scaled = ss.transform(a)
-b_scaled = ss.transform(b)
+a_poly =poly.transform(a)
+b_poly =poly.transform(b)
+a_scaled = ss.transform(a_poly)
+b_scaled = ss.transform(b_poly)
 print(sc.predict(a_scaled))
 print(sc.predict(b_scaled))
