@@ -8,9 +8,10 @@ class Service:
         self.model = None
         self.poly = None
         self.scaled = None
-
+        #self.df = pd.read_csv('./day05/practice9/user.csv')
     def train(self, userList):
         l = []
+        #df = self.df
         df = pd.DataFrame(userList)
         train_data = df[['age', 'gender', 'inflow', 'style']]
         print(train_data)
@@ -29,20 +30,17 @@ class Service:
             test_scaled = ss.transform(test_poly)
             
             for alpha in [0.0001, 0.001, 0.01, 0.1, 1, 10, 100]:
-                for iter in [10, 100, 1000, 100000, 1000000]:
-                    sc = SGDClassifier(loss='hinge', random_state=42, max_iter=iter, alpha=0.0001)  # max_iter 조정 필요할 수도 있음
+                for iter in [100, 1000, 100000, 1000000]:
+                    sc = SGDClassifier(loss='hinge', random_state=42, max_iter=iter, alpha=alpha)
                     sc.fit(train_scaled, train_target)
-                    r2 = sc.score(test_scaled, test_target)
-                    l.append( {'r2':r2, 'model':sc, 'poly':poly, 'degree':degree, 'scaler':ss, 'alpha':alpha})
-        best_optimization = max(l, key=lambda x : x['r2'])
-        best_model = best_optimization['model']
-        best_poly = best_optimization['poly']
-        scaler = best_optimization['scaler']
-        print(f'최적의 모델 : {best_model}, 다항특성 : {best_poly}, 스케일링 : {scaler}')
-        self.model = sc
-        self.poly = poly
-        self.scaled = ss
-        return sc.score(test_scaled, test_target)
+                    accuracy = sc.score(test_scaled, test_target)
+                    l.append( {'accuracy':accuracy, 'model':sc, 'poly':poly, 'degree':degree, 'scaler':ss, 'alpha':alpha})
+        best_optimization = max(l, key=lambda x : x['accuracy'])
+        self.model = best_optimization['model']
+        self.poly = best_optimization['poly']
+        self.scaled = best_optimization['scaler']
+        print(f"🥇 [최적 설정] 정확도: {best_optimization['accuracy']:.4f}")
+        return best_optimization['accuracy']
     
     def predict(self, user):
         if self.model is None:
@@ -52,6 +50,6 @@ class Service:
         user_features_poly = self.poly.transform(user_features)
         user_features_scaled = self.scaled.transform(user_features_poly)
         predict = self.model.predict(user_features_scaled)
-        return predict[0]
+        return int(predict[0])
     
 service = Service()
