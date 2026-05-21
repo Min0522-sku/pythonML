@@ -62,8 +62,9 @@ plt.show()
 # 최적의 에포크(반복횟수)는 학습용과 테스트용이 고르게 오르는 시점
 
 
-# hinge
-sc =SGDClassifier(loss='hinge', max_iter=100, random_state=42)
+# hinge / SVM(서포트 벡터 머신)
+# alpha = : 기본값 0.0001, 힌지 함수는 경계면(애매/아슬 한)에 있는 자료들을 찾는 기준
+sc =SGDClassifier(loss='hinge', max_iter=100, random_state=42, alpha= 0.001)
 sc.fit(train_scaled, train_target)
 
 print(sc.score(train_scaled, train_target))
