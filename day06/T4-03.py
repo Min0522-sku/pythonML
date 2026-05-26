@@ -85,29 +85,43 @@ print(scores) # 'test_score': array([0.87179487, 0.89333333, 0.8973306 , 0.85934
 print(np.mean(scores['test_score'])) # 0.8805410414363187
 # hgb.fit(train_input, train_target)
 
-# 분류 모델
-
-# 사이킷런  앙상블(앞전 계산에 사용된 오차/결과를 다음/전체에 정확도 향상하는데 상쇄 방법)
-# 1. 랜덤포레스트 : 샘플/특성 무작위로 선정하여 모델 학습, 튜닝 시간이 부족하거나 베이스 모델 사용
-# 2. 엑스트라트리 : 노드분할기준을 무작위로 선정하여 모델 학습, 성능 변동이 있더라도 학습 속도 개선 사용
-# 3. 그레이디언트부스팅 : 부모노드에서 오차를 자식노드에게 전달하는 모델 학습, 학습 속도 보다 정교한 모델 사용
-# 4. 히스토그램기반 그레디언트부스팅 : 연속된 샘플들을 구간(256) 만들어서 모델 학습, 전처리 시간이 부족하거나 학습 속도 개선 사용 
-
 # 외부 라이브러리 앙상블 (사용 빈도 큼)
-# 1. pip install xgboost (캐글 대회에서 나온 알고리즘)
+# 1. pip install xgboost ( 캐글 대회 에서 나온 알고리즘 )
+# 장점1 : 손실함수( 라쏘, 릿지 ) 규제 내장 포함 , 과적합 방지
+# 장점2 : 병렬처리 로 CPU 캐시(임시메모리) 사용( 속도 향상 )
 from xgboost import XGBClassifier
 xgb = XGBClassifier(tree_method='hist', random_state=42)
 scores = cross_validate(xgb, train_input, train_target, n_jobs=-1)
 print(np.mean(scores['test_score'])) # 0.883414731743273
 
-# 2. pip install lightgbm (MS 회사에서 나온 알고리즘)
+# 2. pip install lightgbm ( MS 회사 에서 나온 알고리즘 ) * 분류모델에서 사용빈도 큼*
+# 장점1 : gbm( 그레이디언트 부스팅 ) 기반으로 부모가 자식에게 오차를 물려주는 방법 ( 원핫인코딩(문자형->숫자형변경) 안함 )
+# 장점2 : 부모( 왼쪽자식노드 , 오른쪽자식노드 ) 기준으로 오차가 큰 자식노드 부터 처리 하는 방법( 비대칭 구조 )
+# 예] 작은 오차 노드는 무시하고 큰 오차 노드부터 최적화 한다. 과대적합 위험있다. 최소 노드샘플로 과대적합을 방지한다.
+# 즉] 공부 못하는 자식을 우선적으로 최적화 한다.
 from lightgbm import LGBMClassifier
 lgb = LGBMClassifier(random_state=42)
 scores = cross_validate(lgb, train_input, train_target, n_jobs=-1)
 print(np.mean(scores['test_score'])) # 0.8846461327857632
 
-# 3. pip install catboost (IT회사에서 나온 알고리즘)
+# 3. pip install catboost ( IT 회사 에서 나온 알고리즘 )
+# 장점1 : 문자형(느리다)으로 된 자료들을 숫자형(빠르다)로 변경이 필요할때 ( category ) , '문구' == 1
+# 장점2 : 문자형을 숫자형으로 변경하는 *시뮬레이션(변경했다는 가정)* 예측에 대한 시뮬레이션 수치화 한다.
+# 예] 자식 노드가 동일한 조건으로 분리하고 자식노드에 대한 샘플 자료를 수치화 하여 예측 속도 향상 한다.
 from catboost import CatBoostClassifier
 cat = CatBoostClassifier(random_state=42, verbose=0)
 scores = cross_validate(cat, train_input, train_target, n_jobs=-1)
 print(np.mean(scores['test_score'])) # 0.8809519296582952
+
+
+# 분류모델 선정 ( 정형 데이터 = 특정한 조건에 기준으로 정리된 데이터들( 엑셀/DB TABLE/CSV 등등 ) ) 
+
+# 사이킷런 앙상블( 앞전 계산에 사용된 오차/결과를 다음/전체에 정확도 향상 하는데 상쇄 방법)
+# 1. 랜덤포레스트 : 샘플/특성 무작위로 선정하여 모델 학습 , 튜닝 시간이 부족하거나 베이스 모델 사용
+# 2. 엑스트라트리 : 노드분할기준 무작위로 선정하여 모델 학습 , 성능 변동이 있더라도 학습 속도 개선 사용.
+# 3. 그레이디언트부스팅 : 부모노드에서 오차를 자식노드에게 전달하는 모델 학습 , 학습 속도 보다 정교한 모델 사용 
+# 4. 히스토그램기반 그레이디언트부스팅 : 연속된 샘플들을 구간(256개) 만들어서 모델 학습, 전처리 시간이 부족하거나 학습 속도 개선 사용
+# 5. xgboost : 손실함수( 라쏘 , 릿지 ) 규제 사용 과 CPU 캐시 사용 하는 모델 학습   
+# *6. lightgbm : 오차가 큰 노드 부터 최적하는 모델 학습 , 학습 속도 향상 모델 사용 , 
+# 7. catboost : 데이터가 문자형으로 대다수 인 경우 와 튜닝 최소화 하는 모델 학습 , 문자형 학습 모델 사용
+# VS 로지스틱 회귀 VS 비정형( 이미지/사진 ) 
