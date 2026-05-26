@@ -30,7 +30,7 @@ class Service:
             test_scaled = ss.transform(test_poly)
             
             for alpha in [0.0001, 0.001, 0.01, 0.1, 1, 10, 100]:
-                sc = SGDClassifier(loss='hinge', random_state=42, max_iter=100000, alpha=alpha, tol= None)
+                sc = SGDClassifier(loss='hinge', random_state=42, max_iter=10000, alpha=alpha, tol= None)
                 sc.fit(train_scaled, train_target)
                 accuracy = sc.score(test_scaled, test_target)
                 l.append( {'accuracy':accuracy, 'model':sc, 'poly':poly, 'degree':degree, 'scaler':ss, 'alpha':alpha})
